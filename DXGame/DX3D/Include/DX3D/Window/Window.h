@@ -11,8 +11,14 @@ namespace dx3d
 		virtual ~Window() override;
 
 
+	protected:
+		void* getHandle() { return m_handle; }
+		Rect getSize() { return m_size; }
+
+
 	private:
 		void* m_handle{};
+		Rect m_size{};
 	};
 }
 

@@ -1,4 +1,6 @@
 #include "DX3D/Graphics/RenderSystem.h"
+#include "DX3D/Graphics/GraphicsLogUtils.h"
+#include "DX3D/Graphics/SwapChain.h"
 
 dx3d::RenderSystem::RenderSystem(const RenderSystemDesc& desc):
 	Base(desc.base)
@@ -10,16 +12,33 @@ dx3d::RenderSystem::RenderSystem(const RenderSystemDesc& desc):
 	createDeviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
 #endif
 
-	auto hr = D3D11CreateDevice(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, createDeviceFlags, NULL, 0, D3D11_SDK_VERSION,
-		&m_d3dDevice, &featureLevel, &m_DeviceContext);
+	DX3DGraphicsLogErrorAndThrow(D3D11CreateDevice(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, createDeviceFlags, NULL, 0, D3D11_SDK_VERSION,
+		&m_d3dDevice, &featureLevel, &m_DeviceContext),
+		"Direct3D11 Initialisation failed.");
 
-	if (FAILED(hr))
-	{
-		getLogger().log(Logger::LogLevel::Error, "Direct3D11 initialisation failed.");
-		throw std::runtime_error("Direct3D11 initialisation failed.");
-	}
+	DX3DGraphicsLogErrorAndThrow(m_d3dDevice->QueryInterface(IID_PPV_ARGS(&m_dxgiDevice)), 
+		"QueryInterface failed to retrieve IDXGIDevice.");
+
+	DX3DGraphicsLogErrorAndThrow(m_dxgiDevice->GetParent(IID_PPV_ARGS(&m_dxgiAdapter)),
+		"GetParent failed to retrieve IDXGIAdapter.");
+
+	DX3DGraphicsLogErrorAndThrow(m_dxgiAdapter->GetParent(IID_PPV_ARGS(&m_dxgiFactory)),
+		"GetParent failed to retrieve IDXGIFactory.");
+
+	
 }
 
 dx3d::RenderSystem::~RenderSystem()
 {
+}
+
+dx3d::SwapChainPtr dx3d::RenderSystem::createSwapChain(const SwapChainDesc& desc) const
+{
+
+	return std::make_shared<SwapChain>(desc, getGraphicsResourceDesc());
+}
+
+dx3d::GraphicsResourceDesc dx3d::RenderSystem::getGraphicsResourceDesc() const noexcept
+{
+	return { {m_logger}, shared_from_this(), *m_d3dDevice.Get(), *m_dxgiFactory.Get() };
 }

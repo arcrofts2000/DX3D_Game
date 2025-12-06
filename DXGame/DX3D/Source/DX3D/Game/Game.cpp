@@ -1,6 +1,7 @@
 #include "DX3D/Core/Logger.h"
 #include "DX3D/Game/Game.h"
 #include "DX3D/Window/Window.h"
+#include "DX3D/Game/Display.h"
 #include "DX3D/Graphics/GraphicsEngine.h"
 
 dx3d::Game::Game(const GameDesc& desc):
@@ -8,12 +9,12 @@ dx3d::Game::Game(const GameDesc& desc):
 	m_loggerPtr(&m_logger)
 {
 	m_graphicsEngine = std::make_unique<GraphicsEngine>(GraphicsEngineDesc{m_logger});
-	m_display = std::make_unique<Window>(WindowDesc{m_logger});
+	m_display = std::make_unique<Display>(DisplayDesc{ {m_logger, desc.windowSize}, m_graphicsEngine->getRenderSystem()});
 
-	m_loggerPtr->log(Logger::LogLevel::Info, "Game Initialised.");
+	DX3DLogInfo("Game Initialised.");
 }
 
 dx3d::Game::~Game()
 {
-	m_loggerPtr->log(Logger::LogLevel::Info, "Game deallocation starting.");
+	DX3DLogInfo("Game deallocation starting.");
 }
